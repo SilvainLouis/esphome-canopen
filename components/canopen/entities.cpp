@@ -159,17 +159,28 @@ void SwitchEntity::setup(CanopenComponent *canopen) {
 #endif
 
 #ifdef USE_LIGHT
+void LightStateEntity::on_light_remote_values_update() {
+  bool state = bool(light->remote_values.get_state());
+  od_set_state(canopen, state_key, &state, 1);
+  if (brightness_key) {
+    uint8_t brightness = percentage_to_wire(light->remote_values.get_brightness());
+    od_set_state(canopen, brightness_key, &brightness, 1);
+  }
+  if (colortemp_key) {
+    uint8_t colortemp = color_temp_to_wire(light->remote_values.get_color_temperature());
+    od_set_state(canopen, colortemp_key, &colortemp, 1);
+  }
+}
+
 void LightStateEntity::setup(CanopenComponent *canopen) {
+  this->canopen = canopen;
   bool state = bool(light->remote_values.get_state());
   uint8_t brightness = percentage_to_wire(light->remote_values.get_brightness());
   uint8_t colortemp = color_temp_to_wire(light->remote_values.get_color_temperature());
 
-  uint32_t state_key = canopen->od_add_state(entity_id, CO_TUNSIGNED8, &state, 1, tpdo);
+  state_key = canopen->od_add_state(entity_id, CO_TUNSIGNED8, &state, 1, tpdo);
   canopen->od_add_cmd(
       entity_id, [this](void *buffer, uint32_t size) { light->make_call().set_state(*(uint8_t *) buffer).perform(); });
-
-  uint32_t brightness_key = 0;
-  uint32_t colortemp_key = 0;
 
   uint32_t version = 1;
   uint32_t caps = 0;
@@ -212,19 +223,7 @@ void LightStateEntity::setup(CanopenComponent *canopen) {
     ESP_LOGD(TAG, "min_mireds: %f, max_mireds: %f", min_mireds, max_mireds);
     canopen->od_add_min_max_metadata(entity_id, min_mireds, max_mireds);
   }
-
-  // light->add_new_remote_values_callback([=, this]() {
-  //   bool state = bool(light->remote_values.get_state());
-  //   od_set_state(canopen, state_key, &state, 1);
-  //   if(brightness_key) {
-  //     uint8_t brightness =  percentage_to_wire(light->remote_values.get_brightness());
-  //     od_set_state(canopen, brightness_key, &brightness, 1);
-  //   }
-  //   if(colortemp_key) {
-  //     uint8_t colortemp = color_temp_to_wire(light->remote_values.get_color_temperature());
-  //     od_set_state(canopen, colortemp_key, &colortemp, 1);
-  //   }
-  // });
+  light->add_remote_values_listener(this);
 }
 #endif
 

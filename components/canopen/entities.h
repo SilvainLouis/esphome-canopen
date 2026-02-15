@@ -10,6 +10,10 @@
 #include "co_if.h"
 #include "co_cmd.h"
 
+#ifdef USE_LIGHT
+#include "esphome/components/light/light_state.h"
+#endif
+
 #ifdef USE_CANOPEN_OTA
 #include "ota/ota.h"
 #endif
@@ -37,12 +41,6 @@ class BinarySensor;
 #ifdef USE_SWITCH
 namespace switch_ {
 class Switch;
-}
-#endif
-
-#ifdef USE_LIGHT
-namespace light {
-class LightState;
 }
 #endif
 
@@ -138,14 +136,24 @@ class SwitchEntity : public BaseCanopenEntity {
 #endif
 
 #ifdef USE_LIGHT
-class LightStateEntity : public BaseCanopenEntity {
+class LightStateEntity : public BaseCanopenEntity, public esphome::light::LightRemoteValuesListener {
+  CanopenComponent *canopen;
+  uint32_t state_key;
+  uint32_t brightness_key;
+  uint32_t colortemp_key;
+
  public:
   esphome::light::LightState *light;
   LightStateEntity(esphome::light::LightState *light, uint32_t entity_id, TPDO tpdo)
       : BaseCanopenEntity(entity_id, tpdo) {
     this->light = light;
+    this->state_key = 0;
+    this->brightness_key = 0;
+    this->colortemp_key = 0;
+    this->canopen = 0;
   }
   void setup(CanopenComponent *canopen) override;
+  void on_light_remote_values_update() override;
 };
 #endif
 
