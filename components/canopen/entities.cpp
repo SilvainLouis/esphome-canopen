@@ -31,7 +31,7 @@ float color_temp_from_wire(uint32_t value) { return scale_from_wire(value, 100.0
 #ifdef USE_SENSOR
 void SensorEntity::setup(CanopenComponent *canopen) {
 
-  char device_class_buf[100];
+  char device_class_buf[MAX_DEVICE_CLASS_LENGTH];
   const char *device_class_tmp = sensor->get_device_class_to(device_class_buf);
   std::string device_class(device_class_tmp ? device_class_tmp : "");
 
@@ -87,16 +87,12 @@ void SensorEntity::setup(CanopenComponent *canopen) {
 #ifdef USE_NUMBER
 void NumberEntity::setup(CanopenComponent *canopen) {
 
-  char device_class_buf[100];
-  const char *device_class_tmp = number->traits.get_device_class_to(device_class_buf);
-  std::string device_class(device_class_tmp ? device_class_tmp : "");
-
   float state = number->state;
   canopen->od_add_metadata(entity_id,
                            size == 1   ? ENTITY_TYPE_NUMBER_UINT8
                            : size == 2 ? ENTITY_TYPE_NUMBER_UINT16
                                        : ENTITY_TYPE_NUMBER,
-                           number->get_name(), device_class, "", "");
+                           number->get_name(), "", "", "");
 
   canopen->od_add_min_max_metadata(entity_id, min_val, max_val);
   uint32_t state_key;
@@ -143,7 +139,7 @@ void NumberEntity::setup(CanopenComponent *canopen) {
 
 void BinarySensorEntity::setup(CanopenComponent *canopen) {
 
-  char device_class_buf[100];
+  char device_class_buf[MAX_DEVICE_CLASS_LENGTH];
   const char *device_class_tmp = sensor->get_device_class_to(device_class_buf);
   std::string device_class(device_class_tmp ? device_class_tmp : "");
 
@@ -160,7 +156,7 @@ void BinarySensorEntity::setup(CanopenComponent *canopen) {
 #ifdef USE_SWITCH
 void SwitchEntity::setup(CanopenComponent *canopen) {
 
-  char device_class_buf[100];
+  char device_class_buf[MAX_DEVICE_CLASS_LENGTH];
   const char *device_class_tmp = switch_->get_device_class_to(device_class_buf);
   std::string device_class(device_class_tmp ? device_class_tmp : "");
 
@@ -278,7 +274,7 @@ void CoverEntity::setup(CanopenComponent *canopen) {
     caps |= 2;
   }
 
-  char device_class_buf[100];
+  char device_class_buf[MAX_DEVICE_CLASS_LENGTH];
   const char *device_class_tmp = cover->get_device_class_to(device_class_buf);
   std::string device_class(device_class_tmp ? device_class_tmp : "");
 
