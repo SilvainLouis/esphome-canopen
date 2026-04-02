@@ -278,8 +278,12 @@ void CoverEntity::setup(CanopenComponent *canopen) {
     caps |= 2;
   }
 
+  char device_class_buf[100];
+  const char *device_class_tmp = cover->get_device_class_to(device_class_buf);
+  std::string device_class(device_class_tmp ? device_class_tmp : "");
+
   canopen->od_add_metadata(entity_id, ENTITY_TYPE_COVER | (version << 8) | (caps << 16), cover->get_name(),
-                           cover->get_device_class_to(), "", "");
+                           device_class, "", "");
   auto state_key = canopen->od_add_state(entity_id, CO_TUNSIGNED8, &state, 1, tpdo);
 
   canopen->od_add_cmd(entity_id, [this](void *buffer, uint32_t size) {
